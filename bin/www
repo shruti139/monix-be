@@ -84,7 +84,7 @@ function onError(error) {
 
 async function onListening() {
   var addr = server.address();
-  await mongoose.connect('mongodb://localhost:27017/categorydb', { useNewUrlParser: true, useUnifiedTopology: true })
+  await mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err));
   var bind = typeof addr === 'string'
