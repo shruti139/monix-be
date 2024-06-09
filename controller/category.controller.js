@@ -3,10 +3,21 @@ const Category = require('../models/category.model');
 // Get all categories
 const getCategories = async (req, res) => {
     try {
-        const categories = await Category.find()
-        res.status(200).json({ categories: categories, message: "Categories fetched" });
+        const { limit, page } = req.query;
+        const categories = await Category.find().limit(limit).skip(limit * (page - 1)).exec();
+        res.status(200).json({ categories: categories, message: "Categories fetched", success: true });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message, success: false });
+    }
+};
+// Get all categories
+const getCategoriesWithoutPagination = async (req, res) => {
+    try {
+        const { limit, page } = req.query;
+        const categories = await Category.find();
+        res.status(200).json({ categories: categories, message: "Categories fetched", success: true });
+    } catch (error) {
+        res.status(500).json({ message: error.message, success: false });
     }
 };
 
@@ -14,8 +25,8 @@ const getCategories = async (req, res) => {
 const getCategory = async (req, res) => {
     try {
         const category = await Category.findById(req.params.id)
-        if (!category) return res.status(404).json({ message: 'Category not found' });
-        res.status(200).json({ category, message: "Category fetched" });
+        if (!category) return res.status(404).json({ message: 'Category not found', success: false });
+        res.status(200).json({ category, message: "Category fetched", success: true });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -26,13 +37,13 @@ const createCategory = async (req, res) => {
     const { name } = req.body;
     try {
         const findcategory = await Category.findOne({ name });
-        if (findcategory) return res.status(404).json({ message: 'Category already found' });
+        if (findcategory) return res.status(404).json({ message: 'Category already found', success: false });
         const category = new Category({ name });
         const savedCategory = await category.save();
-        res.status(201).json({ category: savedCategory, message: "Category created" });
+        res.status(201).json({ category: savedCategory, message: "Category created", success: true });
     } catch (error) {
         console.log("🚀 ~ createCategory ~ error:", error)
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ message: error.message, success: false });
     }
 };
 
@@ -41,15 +52,15 @@ const updateCategory = async (req, res) => {
     const { name, subcategories } = req.body;
     try {
         const category = await Category.findById(req.params.id);
-        if (!category) return res.status(404).json({ message: 'Category not found' });
+        if (!category) return res.status(404).json({ message: 'Category not found', success: false });
 
         category.name = name || category.name;
 
 
         const updatedCategory = await category.save();
-        res.status(200).json({ category: updatedCategory, "message": "Category updated" });
+        res.status(200).json({ category: updatedCategory, "message": "Category updated", success: true });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ message: error.message, success: false });
     }
 };
 
@@ -57,12 +68,12 @@ const updateCategory = async (req, res) => {
 const deleteCategory = async (req, res) => {
     try {
         const category = await Category.findById(req.params.id);
-        if (!category) return res.status(404).json({ message: 'Category not found' });
+        if (!category) return res.status(404).json({ message: 'Category not found', success: false });
 
         await Category.findByIdAndDelete(req.params.id).exec();
-        res.status(200).json({ message: 'Category deleted' });
+        res.status(200).json({ message: 'Category deleted', success: true });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message, success: false });
     }
 };
 
@@ -71,5 +82,6 @@ module.exports = {
     getCategory,
     createCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
+    getCategoriesWithoutPagination
 };

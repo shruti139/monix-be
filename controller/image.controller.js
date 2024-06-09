@@ -57,9 +57,9 @@ const getImages = async (req, res) => {
 
         ]);
         // const images = await Image.find(filter).populate([{ path: 'category', match: filter }, { path: 'subcategory', match: filter }])
-        res.status(200).json({ imagess, message: "images fetched" });
+        res.status(200).json({ imagess, message: "images fetched", success: true});
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message, success: false  });
     }
 };
 
@@ -67,10 +67,10 @@ const getImages = async (req, res) => {
 const getImage = async (req, res) => {
     try {
         const image = await Image.findById(req.params.id).populate(['category', 'subcategory']);
-        if (!image) return res.status(404).json({ message: 'Image not found' });
-        res.status(200).json({ image, message: "image fetched" });
+        if (!image) return res.status(404).json({ message: 'Image not found' , success: false });
+        res.status(200).json({ image, message: "image fetched", success: true });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message, success: false  });
     }
 };
 
@@ -80,12 +80,12 @@ const createImage = async (req, res) => {
     const imagepath = req.file ? req.file.path : null;
     try {
         const findImage = await Image.findOne({ name, category, subcategory });
-        if (findImage) return res.status(404).json({ message: 'Image already found' });
+        if (findImage) return res.status(404).json({ message: 'Image already found' , success: false });
         const image = new Image({ image: imagepath, category, subcategory, name, imageType });
         const savedImage = await image.save();
-        res.status(201).json({ image: savedImage, message: "image created" });
+        res.status(201).json({ image: savedImage, message: "image created" , success: true});
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ message: error.message, success: false });
     }
 };
 const updateImage = async (req, res) => {
@@ -96,9 +96,9 @@ const updateImage = async (req, res) => {
     }
     try {
         const savedImage = await Image.findByIdAndUpdate(req?.params?.id, req?.body, { new: true });
-        res.status(201).json({ image: savedImage, message: "image updated" });
+        res.status(201).json({ image: savedImage, message: "image updated" , success: true});
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ message: error.message, success: false  });
     }
 };
 
@@ -106,26 +106,26 @@ const updateImage = async (req, res) => {
 const deleteImage = async (req, res) => {
     try {
         const image = await Image.findById(req.params.id);
-        if (!image) return res.status(404).json({ message: 'Image not found' });
+        if (!image) return res.status(404).json({ message: 'Image not found', success: false  });
 
         await Image.findByIdAndDelete(req.params.id).exec();
-        res.status(200).json({ message: 'Image deleted' });
+        res.status(200).json({ message: 'Image deleted', success: true });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message , success: false });
     }
 };
 
 const incrementDownloadCount = async (req, res) => {
     try {
         const image = await Image.findById(req.params.id);
-        if (!image) return res.status(404).json({ message: 'Image not found' });
+        if (!image) return res.status(404).json({ message: 'Image not found', success: false  });
 
         image.downloadCount += 1;
         await image.save();
 
-        res.status(200).json({ message: 'Download count incremented', downloadCount: image.downloadCount });
+        res.status(200).json({ message: 'Download count incremented', downloadCount: image.downloadCount, success: true });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message , success: false });
     }
 };
 
