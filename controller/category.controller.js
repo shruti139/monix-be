@@ -34,11 +34,14 @@ const getCategory = async (req, res) => {
 
 // Create a new category
 const createCategory = async (req, res) => {
-    const { name } = req.body;
+    if (req?.file) {
+        req.body.image = req?.file?.path
+    }
+    const { name, image } = req.body;
     try {
         const findcategory = await Category.findOne({ name });
         if (findcategory) return res.status(404).json({ message: 'Category already found', success: false });
-        const category = new Category({ name });
+        const category = new Category({ name, image });
         const savedCategory = await category.save();
         res.status(201).json({ category: savedCategory, message: "Category created", success: true });
     } catch (error) {
@@ -49,12 +52,16 @@ const createCategory = async (req, res) => {
 
 // Update a category
 const updateCategory = async (req, res) => {
-    const { name, subcategories } = req.body;
+    if (req?.file) {
+        req.body.image = req?.file?.path
+    }
+    const { name, image } = req.body;
     try {
         const category = await Category.findById(req.params.id);
         if (!category) return res.status(404).json({ message: 'Category not found', success: false });
 
         category.name = name || category.name;
+        category.image = req.body.image || category.image;
 
 
         const updatedCategory = await category.save();
