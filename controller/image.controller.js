@@ -50,6 +50,18 @@ const getImages = async (req, res) => {
                     preserveNullAndEmptyArrays: true
                 }
             },
+            {
+                $group: {
+                    _id: "$_id",
+                    name: { $first: "$name" },
+                    image: { $first: "$image" },
+                    category: { $first: "$category" },
+                    subcategory: { $first: "$subcategory" },
+                    imageType: { $first: "$imageType" },
+                    downloadCount: { $first: "$downloadCount" },
+                }
+            }
+            ,
             { $match: filter },
             pipeline,
             { $skip: (parseInt(page) - 1) * parseInt(limit) },
