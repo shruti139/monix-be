@@ -33,11 +33,14 @@ const getSubCategoriesByCategory = async (req, res) => {
 
 // Create a new subcategories
 const createSubCategory = async (req, res) => {
-    const { name, category } = req.body;
+    if (req?.file) {
+        req.body.image = req?.file?.path
+    }
+    const { name, category, image } = req.body;
     try {
         const findSubCategory = await Subcategory.findOne({ name });
         if (findSubCategory) return res.status(404).json({ message: 'Sub-Category found', success: false });
-        const subcategories = new Subcategory({ name, category });
+        const subcategories = new Subcategory({ name, category, image });
         const savedCategory = await subcategories.save();
         res.status(201).json({ subcategory: savedCategory, message: "Subcategory created", success: true });
     } catch (error) {
@@ -47,6 +50,9 @@ const createSubCategory = async (req, res) => {
 
 // Update a subcategories
 const updateSubCategory = async (req, res) => {
+    if (req?.file) {
+        req.body.image = req?.file?.path
+    }
     const { name, category } = req.body;
     try {
         const subcategories = await Subcategory.findById(req.params.id);
@@ -54,6 +60,7 @@ const updateSubCategory = async (req, res) => {
 
         subcategories.name = name || subcategories?.name;
         subcategories.category = category || subcategories?.category;
+        subcategories.image = req.body.image || subcategories?.image;
 
         const updatedCategory = await subcategories.save();
         res.status(200).json({ subcategory: updatedCategory, message: "Subcategory updated", success: true });

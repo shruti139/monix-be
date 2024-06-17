@@ -9,15 +9,18 @@ const getImages = async (req, res) => {
         if (category) filter['category'] = category
         if (search) {
             const regex = new RegExp(search, 'i')
-            filter = { $or: [{ name: regex }, { "category.name": regex }, { "subcategory.name": regex }] }
+            filter = { ...filter, $or: [{ name: regex }, { "category.name": regex }, { "subcategory.name": regex }] }
         }
-        let pipeline = { $sample: { size: parseInt(limit) } }
+        let pipeline = { $match: {} }
         if (recent) {
             pipeline = { $sort: { createdAt: -1 } }
         }
         if (trending) {
             pipeline = { $sort: { downloadCount: -1 } }
+
         }
+        const total = await Image.countDocuments(filter)
+        console.log("🚀 ~ getImages ~ total:", total)
         const imagess = await Image.aggregate([
 
             {
@@ -62,14 +65,14 @@ const getImages = async (req, res) => {
                 }
             }
             ,
+
             { $match: filter },
             pipeline,
-            { $skip: (parseInt(page) - 1) * parseInt(limit) },
-            { $limit: parseInt(limit) },
 
-        ]);
+        ]).skip(parseInt(limit) * (parseInt(page) - 1)).limit(parseInt(limit)).exec()
+        console.log("🚀 ~ getImages ~ parseInt(limit) * (parseInt(page) - 1):", parseInt(limit) * (parseInt(page) - 1))
         // const images = await Image.find(filter).populate([{ path: 'category', match: filter }, { path: 'subcategory', match: filter }])
-        res.status(200).json({ imagess, message: "images fetched", success: true });
+        res.status(200).json({ imagess, message: "images fetched", success: true, total });
     } catch (error) {
         res.status(500).json({ message: error.message, success: false });
     }
