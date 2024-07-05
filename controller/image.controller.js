@@ -1,12 +1,15 @@
+const mongoose = require('mongoose');
 const Image = require('../models/image.model');
 
 // Get all images
 const getImages = async (req, res) => {
     try {
         let filter = {}
-        const { type, category, search, trending, recent, page, limit } = req?.query
+        let categoryFilter = {}
+        const { type, category, search, trending, recent, page, limit, subcategory } = req?.query
         if (type) filter['imageType'] = type
-        if (category) filter['category'] = category
+        if (category) categoryFilter['category'] = new mongoose.Types.ObjectId(category)
+        if (subcategory) categoryFilter['subcategory'] = new mongoose.Types.ObjectId(subcategory)
         if (search) {
             const regex = new RegExp(search, 'i')
             filter = { ...filter, $or: [{ name: regex }, { "category.name": regex }, { "subcategory.name": regex }] }
@@ -20,8 +23,9 @@ const getImages = async (req, res) => {
 
         }
         const total = await Image.countDocuments(filter)
-        console.log("🚀 ~ getImages ~ total:", total)
+        console.log("🚀 ~ getImages ~ total:", total, categoryFilter)
         const imagess = await Image.aggregate([
+            { $match: categoryFilter },
 
             {
                 $lookup: {
@@ -92,13 +96,20 @@ const getImage = async (req, res) => {
 // Create a new image
 const createImage = async (req, res) => {
     const { category, subcategory, name, imageType } = req.body;
-    const imagepath = req.files?.length ? req?.files?.map(file => file?.path) : null;
+
+
     try {
-        const findImage = await Image.findOne({ name, category, subcategory });
-        if (findImage) return res.status(404).json({ message: 'Image already found', success: false });
-        const image = new Image({ image: imagepath, category, subcategory, name, imageType });
-        const savedImage = await image.save();
-        res.status(201).json({ image: savedImage, message: "image created", success: true });
+
+        console.log("🚀 ~ createImage ~ req?.files:", req?.files)
+        for (const file of req?.files) {
+            console.log("🚀 ~ createImage ~ file:", file)
+            const imagepath = file?.path
+            const image = new Image({ image: imagepath, category, subcategory, name, imageType });
+            console.log("🚀 ~ createImage ~ image:", image)
+            await image.save();
+
+        }
+        res.status(201).json({ message: "image created", success: true });
     } catch (error) {
         res.status(400).json({ message: error.message, success: false });
     }

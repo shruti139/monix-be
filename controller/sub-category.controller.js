@@ -33,10 +33,12 @@ const getSubCategoriesByCategory = async (req, res) => {
 
 // Create a new subcategories
 const createSubCategory = async (req, res) => {
+    console.log("🚀 ~ createSubCategory ~ req?.file:", req?.file)
     if (req?.file) {
         req.body.image = req?.file?.path
     }
     const { name, category, image } = req.body;
+    console.log("🚀 ~ createSubCategory ~ image:", image)
     try {
         const findSubCategory = await Subcategory.findOne({ name });
         if (findSubCategory) return res.status(404).json({ message: 'Sub-Category found', success: false });
