@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Image = require('../models/image.model');
+const categoryModel = require('../models/category.model');
+const subCategoryModel = require('../models/sub-category.model');
 
 // Get all images
 const getImages = async (req, res) => {
@@ -92,6 +94,18 @@ const getImage = async (req, res) => {
         res.status(500).json({ message: error.message, success: false });
     }
 };
+const getSearchResult = async (req, res) => {
+    try {
+        const search = req.query.search;
+        const regex = new RegExp(search, 'i');
+        const category = await categoryModel.find({ name: regex })
+        const subcategory = await subCategoryModel.find({ name: regex })
+
+        res.status(200).json({ data: { category, subcategory }, message: "Result fetched", success: true });
+    } catch (error) {
+        res.status(500).json({ message: error.message, success: false });
+    }
+};
 
 // Create a new image
 const createImage = async (req, res) => {
@@ -162,5 +176,6 @@ module.exports = {
     createImage,
     deleteImage,
     incrementDownloadCount,
-    updateImage
+    updateImage,
+    getSearchResult
 };
