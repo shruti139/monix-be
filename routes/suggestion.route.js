@@ -29,7 +29,6 @@ router.post('/ads/add', async (req, res) => {
         });
     }
     catch (error) {
-        console.log("🚀 ~ chaviOrder ~ error:", error)
         return res.status(500).json({ status: 500, message: "Something went wrong", });
     }
 });
@@ -66,7 +65,6 @@ router.delete('/:id', async (req, res) => {
         if (!suggestion) return res.status(404).send('Suggestion not found');
         res.json({ msg: 'Suggestion removed' });
     } catch (err) {
-        console.log("🚀 ~ router.delete ~ err:", err)
         res.status(500).send('Server Error');
     }
 });

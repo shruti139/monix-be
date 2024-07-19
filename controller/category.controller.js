@@ -45,7 +45,6 @@ const createCategory = async (req, res) => {
         const savedCategory = await category.save();
         res.status(201).json({ category: savedCategory, message: "Category created", success: true });
     } catch (error) {
-        console.log("🚀 ~ createCategory ~ error:", error)
         res.status(400).json({ message: error.message, success: false });
     }
 };

@@ -6,36 +6,34 @@ const subCategoryModel = require('../models/sub-category.model');
 // Get all images
 const getImages = async (req, res) => {
     try {
-        let filter = {}
-        let categoryFilter = {}
-        const { type, category, search, trending, recent, page, limit, subcategory } = req?.query
-        if (type) filter['imageType'] = type
-        if (category) categoryFilter['category'] = new mongoose.Types.ObjectId(category)
-        if (subcategory) categoryFilter['subcategory'] = new mongoose.Types.ObjectId(subcategory)
+        let filter = {};
+        let categoryFilter = {};
+        const { type, category, search, trending, recent, page, limit, subcategory } = req?.query;
+        if (type) filter['imageType'] = type;
+        if (category) categoryFilter['category'] = new mongoose.Types.ObjectId(category);
+        if (subcategory) categoryFilter['subcategory'] = new mongoose.Types.ObjectId(subcategory);
         if (search) {
-            const regex = new RegExp(search, 'i')
-            filter = { ...filter, $or: [{ name: regex }, { "category.name": regex }, { "subcategory.name": regex }] }
+            const regex = new RegExp(search, 'i');
+            filter = { ...filter, $or: [{ name: regex }, { "category.name": regex }, { "subcategory.name": regex }] };
         }
-        let pipeline = { $match: {} }
+        let pipeline = { $match: {} };
         if (recent) {
-            pipeline = { $sort: { createdAt: -1 } }
+            pipeline = { $sort: { createdAt: -1 } };
         }
         if (trending) {
-            pipeline = { $sort: { downloadCount: -1 } }
-
+            pipeline = { $sort: { trending: -1, downloadCount: -1 } };  // Sort by trending and downloadCount
+        } else {
+            pipeline = { $sort: { downloadCount: -1 } };  // Default sort by downloadCount
         }
-        const total = await Image.countDocuments(filter)
-        console.log("🚀 ~ getImages ~ total:", total, categoryFilter)
+        const total = await Image.countDocuments(filter);
         const imagess = await Image.aggregate([
             { $match: categoryFilter },
-
             {
                 $lookup: {
                     from: 'categories',
                     localField: 'category',
                     foreignField: '_id',
                     as: 'category',
-
                 }
             },
             {
@@ -50,7 +48,6 @@ const getImages = async (req, res) => {
                     localField: 'category._id',
                     foreignField: 'category',
                     as: 'subcategory',
-
                 }
             },
             {
@@ -68,21 +65,19 @@ const getImages = async (req, res) => {
                     subcategory: { $first: "$subcategory" },
                     imageType: { $first: "$imageType" },
                     downloadCount: { $first: "$downloadCount" },
+                    trending: { $first: "$trending" }
                 }
-            }
-            ,
-
+            },
             { $match: filter },
             pipeline,
-
-        ]).skip(parseInt(limit) * (parseInt(page) - 1)).limit(parseInt(limit)).exec()
-        console.log("🚀 ~ getImages ~ parseInt(limit) * (parseInt(page) - 1):", parseInt(limit) * (parseInt(page) - 1))
+        ]).skip(parseInt(limit) * (parseInt(page) - 1)).limit(parseInt(limit)).exec();
         // const images = await Image.find(filter).populate([{ path: 'category', match: filter }, { path: 'subcategory', match: filter }])
         res.status(200).json({ imagess, message: "images fetched", success: true, total });
     } catch (error) {
-        res.status(500).json({ message: error.message, success: false });
+        res.status (500).json({ message: error.message, success: false });
     }
 };
+
 
 // Get a single image by ID
 const getImage = async (req, res) => {
@@ -109,32 +104,30 @@ const getSearchResult = async (req, res) => {
 
 // Create a new image
 const createImage = async (req, res) => {
-    const { category, subcategory, name, imageType } = req.body;
-
-
+    const { category, subcategory, name, imageType, trending } = req.body;
     try {
 
-        console.log("🚀 ~ createImage ~ req?.files:", req?.files)
-        for (const file of req?.files) {
-            console.log("🚀 ~ createImage ~ file:", file)
-            const imagepath = file?.path
-            const image = new Image({ image: imagepath, category, subcategory, name, imageType });
-            console.log("🚀 ~ createImage ~ image:", image)
-            await image.save();
 
+        for (const file of req.files) {
+            const imagepath = file.path;
+            const image = new Image({ image: imagepath, category, subcategory, name, imageType, trending }); // Add trending here
+            await image.save();
         }
-        res.status(201).json({ message: "image created", success: true });
+
+        res.status(201).json({ message: "image created", success: true});
     } catch (error) {
+        console.error("Error creating image:", error); // Log any errors
         res.status(400).json({ message: error.message, success: false });
     }
 };
+
+
 const updateImage = async (req, res) => {
     if (req.files?.length) {
         const path = req?.files?.map(file => file?.path)
         req.body.image = path;
 
     }
-    console.log("🚀 ~ updateImage ~ req.body:", req.body, req?.files)
     try {
         const savedImage = await Image.findByIdAndUpdate(req?.params?.id, req?.body, { new: true });
         res.status(201).json({ image: savedImage, message: "image updated", success: true });

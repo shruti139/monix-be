@@ -7,7 +7,8 @@ const ImageSchema = new Schema({
     category: { type: Schema.Types.ObjectId, ref: 'Category' },
     subcategory: { type: Schema.Types.ObjectId, ref: 'Subcategory' },
     imageType: { type: String, required: true },
-    downloadCount: { type: Number, default: 0 }
+    downloadCount: { type: Number, default: 0 },
+    trending: { type: Boolean, default: false},
 }, { timestamps: true });
 
 module.exports = mongoose.model('Image', ImageSchema);
