@@ -45,8 +45,8 @@ const getImages = async (req, res) => {
             {
                 $lookup: {
                     from: 'subcategories',
-                    localField: 'category._id',
-                    foreignField: 'category',
+                    localField: 'subcategory',
+                    foreignField: '_id',
                     as: 'subcategory',
                 }
             },
